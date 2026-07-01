@@ -1,42 +1,43 @@
-const jwt = require('jsonwebtoken');
+const jwt = require("jsonwebtoken");
 
-const authArtist = async (req, res, next) => {
+async function authArtist(req, res, next) {
+
     const token = req.cookies.token;
-    if(!token){
-        return res.status(401).json({ message: "Unauthorized" });
+    if (!token) {
+        return res.status(401).json({ message: "Unauthorized" })
     }
-    try{
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        if(decoded.role !== "artist"){
-            return res.status(403).json({ message: "You dont have access" });
-        }
-        req.user = decoded; 
-        next();
-    }catch(err){ 
-        console.log(err);
-        return res.status(401).json({ message: "Unauthorized" });
-    }
-}
 
-const authUser = async (req, res, next) => {
-    const token = req.cookies.token;
-
-    if(!token){
-        res.status(401).json({ message: "Unauthorised Access" });
-    }
-    try{
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-        if(decoded.role!=='user' && decoded.role!='artist'){
-            res.status(403).json({ message: "You dont have access" });
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET)
+        if (decoded.role !== "artist") {
+            return res.status(403).json({ message: "You don't have access" })
         }
         req.user = decoded;
-        next();
-
-    }catch(err){
+        next()
+    } catch (err) {
         console.log(err);
-        res.status(401).json({ message: "Unauthorised Access" });
+        return res.status(401).json({ message: "Unauthorized" })
     }
 }
 
-module.exports = { authArtist, authUser };
+async function authUser(req, res, next) {
+    const token = req.cookies.token;
+    if (!token) {
+        return res.status(401).json({ message: "Unauthorized" })
+    }
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET)
+        // Allow both regular users and artists to access general music endpoints
+        if (decoded.role !== "user" && decoded.role !== "artist") {
+            return res.status(403).json({ message: "You don't have access" })
+        }
+        req.user = decoded;
+        next()
+    } catch (err) {
+        console.log(err);
+        return res.status(401).json({ message: "Unauthorized" })
+    }
+}
+
+
+module.exports = { authArtist, authUser }

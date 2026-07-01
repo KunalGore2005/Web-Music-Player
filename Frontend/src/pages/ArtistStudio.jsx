@@ -118,7 +118,7 @@ const ArtistStudio = () => {
       setCreatingAlbum(true);
       setAlbumMessage({ text: '', type: '' });
 
-      const res = await fetch(`${API_BASE_URL}/api/music/album`, {
+      const res = await fetch(`${API_BASE_URL}/api/music/albums`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

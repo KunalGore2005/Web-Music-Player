@@ -27,7 +27,7 @@ const Home = () => {
 
         const [songsRes, albumsRes] = await Promise.all([
           fetch(`${API_BASE_URL}/api/music/`, { credentials: 'include' }),
-          fetch(`${API_BASE_URL}/api/music/getAlbums`, { credentials: 'include' })
+          fetch(`${API_BASE_URL}/api/music/albums`, { credentials: 'include' })
         ]);
 
         if (!songsRes.ok || !albumsRes.ok) {
@@ -59,7 +59,7 @@ const Home = () => {
   }
 
   return (
-    <div className="flex-1 overflow-y-auto bg-gradient-to-b from-[#1e1e1e] to-spotify-dark px-6 py-6 no-scrollbar h-full pb-28 animate-fade-in">
+    <div className="flex-1 overflow-y-auto bg-linear-to-b from-[#1e1e1e] to-spotify-dark px-6 py-6 no-scrollbar h-full pb-28 animate-fade-in">
       <h1 className="text-2xl font-extrabold text-white tracking-tight mb-6 select-none">
         {getGreeting()}, {user?.username}
       </h1>
