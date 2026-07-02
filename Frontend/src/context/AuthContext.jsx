@@ -9,64 +9,34 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Helper to read cookie values on the client
-  const getCookie = (name) => {
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) return parts.pop().split(';').shift();
-  };
-
-  // Decode JWT payload without backend endpoints
-  const getUserFromToken = () => {
-    const token = getCookie('token');
-    if (!token) return null;
-    try {
-      const payloadBase64 = token.split('.')[1];
-      const payloadDecoded = JSON.parse(
-        atob(payloadBase64.replace(/-/g, '+').replace(/_/g, '/'))
-      );
-      return payloadDecoded; // contains { id, role }
-    } catch (e) {
-      console.error("Error decoding token cookie:", e);
-      return null;
-    }
-  };
-
   useEffect(() => {
-    const initAuth = () => {
+    const initAuth = async () => {
       const savedUser = localStorage.getItem('spotify_user');
-      const tokenInfo = getUserFromToken();
-
-      if (savedUser && tokenInfo) {
+      if (savedUser) {
         try {
-          const parsed = JSON.parse(savedUser);
-          if (parsed.id === tokenInfo.id) {
-            setUser(parsed);
-          } else {
-            setUser({
-              id: tokenInfo.id,
-              role: tokenInfo.role,
-              username: tokenInfo.role === 'artist' ? 'Artist' : 'User'
-            });
-          }
+          setUser(JSON.parse(savedUser));
         } catch (e) {
-          setUser({
-            id: tokenInfo.id,
-            role: tokenInfo.role,
-            username: tokenInfo.role === 'artist' ? 'Artist' : 'User'
-          });
+          localStorage.removeItem('spotify_user');
         }
-      } else if (tokenInfo) {
-        setUser({
-          id: tokenInfo.id,
-          role: tokenInfo.role,
-          username: tokenInfo.role === 'artist' ? 'Artist' : 'User'
-        });
-      } else {
-        setUser(null);
-        localStorage.removeItem('spotify_user');
       }
-      setLoading(false);
+
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/auth/me`, {
+          credentials: 'include'
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setUser(data.user);
+          localStorage.setItem('spotify_user', JSON.stringify(data.user));
+        } else {
+          setUser(null);
+          localStorage.removeItem('spotify_user');
+        }
+      } catch (err) {
+        console.error("Error verifying session status:", err);
+      } finally {
+        setLoading(false);
+      }
     };
 
     initAuth();
@@ -90,11 +60,11 @@ export const AuthProvider = ({ children }) => {
       throw new Error(data.message || 'Login failed');
     }
 
-    const tokenInfo = getUserFromToken();
     const loggedUser = {
-      id: tokenInfo?.id || 'temp-id',
-      role: tokenInfo?.role || 'user',
-      username: isEmail ? usernameOrEmail.split('@')[0] : usernameOrEmail,
+      id: data.user.id,
+      role: data.user.role,
+      username: data.user.username,
+      email: data.user.email,
     };
 
     setUser(loggedUser);
