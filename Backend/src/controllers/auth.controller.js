@@ -28,7 +28,12 @@ async function registerUser(req, res) {
     }, process.env.JWT_SECRET)
 
 
-    const cookieOptions = { httpOnly: false, sameSite: 'lax', maxAge: 7 * 24 * 60 * 60 * 1000 };
+    const cookieOptions = {
+        httpOnly: false,
+        sameSite: 'none', // allow cross-site cookies in dev and prod
+        secure: process.env.NODE_ENV === 'production', // HTTPS in prod
+        maxAge: 7 * 24 * 60 * 60 * 1000
+    };
     res.cookie("token", token, cookieOptions)
     res.status(201).json({
         message: "User registered successfully",
@@ -66,7 +71,12 @@ async function loginUser(req, res) {
         role: user.role,
     }, process.env.JWT_SECRET)
 
-    const cookieOptions = { httpOnly: false, sameSite: 'lax', maxAge: 7 * 24 * 60 * 60 * 1000 };
+    const cookieOptions = {
+        httpOnly: false,
+        sameSite: 'none', // allow cross-site cookies in dev and prod
+        secure: process.env.NODE_ENV === 'production', // HTTPS in prod
+        maxAge: 7 * 24 * 60 * 60 * 1000
+    };
     res.cookie("token", token, cookieOptions)
 
 
