@@ -29,9 +29,9 @@ async function registerUser(req, res) {
 
 
     const cookieOptions = {
-        httpOnly: false,
-        sameSite: 'none', // allow cross-site cookies in dev and prod
-        secure: process.env.NODE_ENV === 'production', // HTTPS in prod
+        httpOnly: true,
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+        secure: process.env.NODE_ENV === 'production',
         maxAge: 7 * 24 * 60 * 60 * 1000
     };
     res.cookie("token", token, cookieOptions)
@@ -72,9 +72,9 @@ async function loginUser(req, res) {
     }, process.env.JWT_SECRET)
 
     const cookieOptions = {
-        httpOnly: false,
-        sameSite: 'none', // allow cross-site cookies in dev and prod
-        secure: process.env.NODE_ENV === 'production', // HTTPS in prod
+        httpOnly: true,
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+        secure: process.env.NODE_ENV === 'production',
         maxAge: 7 * 24 * 60 * 60 * 1000
     };
     res.cookie("token", token, cookieOptions)
@@ -93,9 +93,34 @@ async function loginUser(req, res) {
 }
 
 async function logoutUser(req, res) {
-    res.clearCookie("token")
+    const cookieOptions = {
+        httpOnly: true,
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+        secure: process.env.NODE_ENV === 'production',
+    };
+    res.clearCookie("token", cookieOptions)
     res.status(200).json({ message: "User logged out successfully" })
 }
 
+async function getCurrentUser(req, res) {
+    try {
+        const user = await userModel.findById(req.user.id).select("-password");
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+        res.status(200).json({
+            user: {
+                id: user._id,
+                username: user.username,
+                email: user.email,
+                role: user.role,
+            }
+        });
+    } catch (err) {
+        console.error("Error in getCurrentUser:", err);
+        res.status(500).json({ message: "Internal server error" });
+    }
+}
 
-module.exports = { registerUser, loginUser, logoutUser }
+
+module.exports = { registerUser, loginUser, logoutUser, getCurrentUser }
